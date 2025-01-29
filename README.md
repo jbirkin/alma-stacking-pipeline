@@ -1,4 +1,4 @@
-# [CII] Spectra Analysis for ALMA Observations
+# Spectral aggregating, stacking and analysis for ALMA Observations
 
 ## Table of Contents
 - [Overview](#overview)

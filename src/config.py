@@ -1,7 +1,7 @@
 from astropy.table import Table
 from astropy.cosmology import Planck18
 
-work_dir = "../"
+work_dir = "./"
 cube_dir = work_dir+"data/cubes/"
 
 cristal_tab_file = work_dir+"data/cristal_table.fits"         # file in which main table is stored
