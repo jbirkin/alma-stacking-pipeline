@@ -30,3 +30,13 @@ def get_median_properties(tab):
     mstar16, mstar_med, mstar84 = 10**np.median(tab["logMstar"][tab["logMstar"]>0], [16,50,84])
     
     return z16, z_med, z84, sfr16, sfr_med, sfr84, mstar16, mstar_med, mstar84
+
+def disable_ax_ticks(ax, wcs=False):
+    if not wcs:
+        ax.set_xticks([])
+        ax.set_yticks([])
+    elif wcs:
+        ax.coords[0].set_ticks_visible(False)
+        ax.coords[0].set_ticklabel_visible(False)
+        ax.coords[1].set_ticks_visible(False)
+        ax.coords[1].set_ticklabel_visible(False)
