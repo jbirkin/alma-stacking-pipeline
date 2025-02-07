@@ -1,20 +1,26 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from astropy.stats import bootstrap
 from photutils import EllipticalAperture
 from scipy.optimize import curve_fit
+import emcee
+import corner
 
-from alma_stacking_pipeline.src.config import cosmo, nu_cii
+from alma_stacking_pipeline.src.config_loader import work_dir, cristal_tab, nu_cii, cosmo
 from alma_stacking_pipeline.src.utils import find_nearest, moments, mc_errors
 from alma_stacking_pipeline.src.line_models import gaussian
+from alma_stacking_pipeline.src.line_models import log_prior_single, log_probability_single, log_likelihood_single
+from alma_stacking_pipeline.src.line_models import log_prior_double, log_probability_double, log_likelihood_double
 
 # ------------------------------------------------------------------------------------------------------------
 
 class alma_cube:
     def __init__(self, nu=None, vel_axis=None, cube=None, error_cube=None, wcs=None, header=None, ID=None,
-                 pix_scale=None, z=None, beams=None, ra=None, dec=None):
+                 pix_scale=None, z=None, beams=None, ra=None, dec=None, fwhm_cii=None):
         self.nu = nu
         self.vel_axis = vel_axis
         self.cube = cube
@@ -31,6 +37,7 @@ class alma_cube:
         self.beams = beams
         self.ra = ra
         self.dec = dec
+        self.fwhm_cii = fwhm_cii
         self.c = SkyCoord(ra, dec, unit=u.deg)
 
     def get_beam_aperture(self):
@@ -50,8 +57,8 @@ class alma_cube:
         self.cube /= pix_per_beam
 
     def get_flux_map(self):
-        i_min = find_nearest(self.nu, nu_cii/(1+self.z)*(1+200/3e05))[0]
-        i_max = find_nearest(self.nu, nu_cii/(1+self.z)*(1-200/3e05))[0]
+        i_min = find_nearest(self.nu, nu_cii/(1+self.z)*(1+self.fwhm_cii/3e05))[0]
+        i_max = find_nearest(self.nu, nu_cii/(1+self.z)*(1-self.fwhm_cii/3e05))[0]
         flux_map = np.nansum(self.cube[i_min:i_max], axis=0)
         # multiply by dv to get integrated [CII] flux
         dv = np.abs(self.vel_axis[1]-self.vel_axis[0])
@@ -465,7 +472,7 @@ class alma_spec:
 
 # ------------------------------------------------------------------------------------------------------------
 
-def make_alma_cube(file, ID, z, ra, dec):
+def make_alma_cube(file, ID, z, ra, dec, fwhm_cii):
     """generate a CRISTAL cube object from a given file"""
     hdul = fits.open(file)
     cube, header = hdul[0].data[0 ,: ,: ,:], hdul[0].header
@@ -486,7 +493,7 @@ def make_alma_cube(file, ID, z, ra, dec):
     vel_axis = ((nu_cii/(1+z))-nu)/(nu_cii/(1+z))*3e05    # velocity axis in km/s
 
     Cube = alma_cube(nu=nu, vel_axis=vel_axis, cube=cube, wcs=wcs, header=header, ID=ID,
-                        pix_scale=pix_scale, z=z, beams=beams, ra=ra, dec=dec)
+                        pix_scale=pix_scale, z=z, beams=beams, ra=ra, dec=dec, fwhm_cii=fwhm_cii)
 
     return Cube
 
@@ -502,7 +509,7 @@ def make_alma_cube_cutout(Cube, size, centre):
     Cube_cutout = alma_cube(nu=Cube.nu, vel_axis=Cube.vel_axis,
                                cube=cube_cut, wcs=wcs_cut, ID=Cube.ID,
                                 pix_scale=Cube.pix_scale, z=Cube.z, beams=Cube.beams,
-                               ra=Cube.ra, dec=Cube.dec)
+                               ra=Cube.ra, dec=Cube.dec, fwhm_cii=Cube.fwhm_cii)
 
     return Cube_cutout
 
