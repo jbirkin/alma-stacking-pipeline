@@ -1,31 +1,23 @@
-# Spectral aggregating, stacking and analysis for ALMA Observations
+# CRISTAL High-Redshift Galaxy Stacking Analysis
 
-## Table of Contents
-- [Overview](#overview)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-  - [Requirements](#requirements)
-  - [Installation](#installation)
-- [Usage](#usage)
-  - [Data Preparation](#data-preparation)
-  - [Running the Analysis](#running-the-analysis)
-- [Configuration](#configuration)
-- [Results](#results)
-- [Contributing](#contributing)
-- [License](#license)
+This project contains the code used to stack [CII] spectra from a sample of z~5 star-forming galaxies.
+The goal is to search for and characterize broad emission features that may indicate star-formation-driven outflows.
 
-## Overview
-This project leverages ALMA [CII] data to detect and analyze potential outflow signatures in galaxies. By stacking 
-spectra, fitting models, and performing statistical analysis, we aim to uncover broad components that could signal 
-outflows driven by star formation or other feedback mechanisms in high-redshift galaxies.
+## Contents
 
-## Project Structure
-- `src/` - Contains the main source code for data extraction, analysis, and model fitting.
-  - `main.py` - Main script to run the analysis.
-  - `config.py` - Configuration file for setting constants and paths.
-  - `utils.py` - Utility functions for data handling and plotting.
-  - `data/` - Data-specific classes and methods.
-- `notebooks/` - Jupyter notebooks demonstrating parts of the analysis.
-- `data/` - Directory for storing data files (not included in this repository).
-- `results/` - Folder where output figures and result files are saved.
-- `README.md` - Project documentation (this file).
+- `utils/`: Python modules for stacking, normalization, and fitting
+- `scripts/`: Scripts used to carry out the analysis
+
+## Requirements
+
+Install dependencies using:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Author
+
+Jack Birkin
+
+Postdoctoral Research Associate, Texas A&M University
