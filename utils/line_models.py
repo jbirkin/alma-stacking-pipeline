@@ -1,12 +1,11 @@
-from defaults import cosmo
 import numpy as np
 import emcee
 import astropy.units as u
-from tools import mc_errors
 from scipy.integrate import simpson
 
-from alma_stacking_pipeline.src.config_loader import nu_cii
-from alma_stacking_pipeline.src.formulae import compute_m_atom_out, compute_m_out_dot, convert_LCII_to_SFR_lagache
+from astro_cubes.tools import mc_errors
+from src.utils.tables import cosmo, nu_cii
+from src.utils.formulae import m_out_dot, m_atom_out, SFR_lagache
 
 # ------------------------------------------------------------------------------------------------------------
 # models
@@ -67,14 +66,14 @@ class line_model_single:
         self.Icii_narrow_err = -99.
         self.Lcii_narrow = 1.04e-03*self.Icii_narrow*nu_cii/(1+self.z)*self.Dl**2        # luminosity of [CII] outflow
         self.Lcii_narrow_err = -99.
-        self.sfr_cii = convert_LCII_to_SFR_lagache(self.Lcii_narrow, self.z)
+        self.sfr_cii = SFR_lagache(self.Lcii_narrow, self.z)
 
     def get_errors(self):
         f = lambda amp, sig : amp*sig*(2*np.pi)**0.5/1000
         self.Icii_narrow_err = mc_errors(f=f, params=[self.amp1,self.sig1], errors=[self.amp1_err,self.sig1_err])
         f = lambda Icii : 1.04e-03*Icii*nu_cii/(1+self.z)*self.Dl**2
         self.Lcii_narrow_err = mc_errors(f=f, params=[self.Icii_narrow], errors=[self.Icii_narrow_err])
-        self.sfr_cii_err = mc_errors(f=convert_LCII_to_SFR_lagache, params=[self.Lcii_narrow,self.z],
+        self.sfr_cii_err = mc_errors(f=SFR_lagache, params=[self.Lcii_narrow,self.z],
                                      errors=[self.Lcii_narrow_err,0])
 
 # ------------------------------------------------------------------------------------------------------------
@@ -124,7 +123,7 @@ class line_model_double:
         self.Icii_narrow_err = -99.
         self.Lcii_narrow = 1.04e-03*self.Icii_narrow*nu_cii/(1+self.z)*self.Dl**2        # luminosity of [CII] outflow
         self.Lcii_narrow_err = -99.
-        self.sfr_cii = convert_LCII_to_SFR_lagache(self.Lcii_narrow, self.z)
+        self.sfr_cii = SFR_lagache(self.Lcii_narrow, self.z)
 
         # Broad line properties
         self.Icii_out = self.amp2*self.sig2*(2*np.pi)**0.5/1000     # flux of [CII] outflow (Jy km/s)
@@ -148,15 +147,15 @@ class line_model_double:
         # Outflow velocity, measured according to Lutz+20
         self.v_out = abs(self.mean2) + 4.292*self.sig2/2
         # Atomic outflow mass, from Ginolfi+20
-        self.m_out = compute_m_atom_out(self.Lcii_out)
+        self.m_out = m_atom_out(self.Lcii_out)
         self.m_out_err = -99.
         # Atomic outflow mass, from Lutz+20
-        self.m_out_wings = compute_m_atom_out(self.Lcii_wings)
+        self.m_out_wings = m_atom_out(self.Lcii_wings)
         self.m_out_wings_err = -99.
         # Mass outflow rates
-        self.m_out_dot = compute_m_out_dot(v_out=self.v_out, M_out=self.m_out, R_out=6)
+        self.m_out_dot = m_out_dot(v_out=self.v_out, M_out=self.m_out, R_out=6)
         self.m_out_dot_err = -99.
-        self.m_out_dot_wings = compute_m_out_dot(v_out=self.v_out, M_out=self.m_out_wings, R_out=6)
+        self.m_out_dot_wings = m_out_dot(v_out=self.v_out, M_out=self.m_out_wings, R_out=6)
         self.m_out_dot_wings_err = -99.
         #
         self.out_frac = (self.amp2*self.sig2)/(self.amp1*self.sig1)
@@ -180,11 +179,11 @@ class line_model_double:
         self.Lcii_wings_err = mc_errors(f=f, params=[self.Icii_wings], errors=[self.Icii_wings_err])
         f = lambda mean2, sig2 : abs(mean2) + 4.292*sig2/2
         self.v_out_err = mc_errors(f=f, params=[self.mean2,self.sig2], errors=[self.mean2_err,self.sig2_err])
-        self.m_out_err = mc_errors(f=compute_m_atom_out, params=[self.Lcii_out], errors=[self.Lcii_out_err])
-        self.m_out_dot_err = mc_errors(f=compute_m_out_dot, params=[self.v_out,self.m_out,6],
+        self.m_out_err = mc_errors(f=m_atom_out, params=[self.Lcii_out], errors=[self.Lcii_out_err])
+        self.m_out_dot_err = mc_errors(f=m_out_dot, params=[self.v_out,self.m_out,6],
                                        errors=[0,self.m_out_err,0])
-        self.m_out_wings_err = mc_errors(f=compute_m_atom_out, params=[self.Lcii_wings], errors=[self.Lcii_wings_err])
-        self.m_out_dot_wings_err = mc_errors(f=compute_m_out_dot, params=[self.v_out,self.m_out_wings,6],
+        self.m_out_wings_err = mc_errors(f=m_atom_out, params=[self.Lcii_wings], errors=[self.Lcii_wings_err])
+        self.m_out_dot_wings_err = mc_errors(f=m_out_dot, params=[self.v_out,self.m_out_wings,6],
                                        errors=[0,self.m_out_wings_err,0])
         f = lambda amp2, sig2, amp1, sig1 : (amp2*sig2)/(amp1*sig1)
         self.out_frac_err = mc_errors(f=f, params=[self.amp2,self.sig2,self.amp1,self.sig1],
@@ -192,7 +191,7 @@ class line_model_double:
         f = lambda m_out_dot, sfr : m_out_dot/sfr
         self.mass_load_factor_err = mc_errors(f=f, params=[self.m_out_dot,self.sfr],
                                               errors=[self.m_out_dot_err,0])
-        self.sfr_cii_err = mc_errors(f=convert_LCII_to_SFR_lagache, params=[self.Lcii_narrow,self.z],
+        self.sfr_cii_err = mc_errors(f=SFR_lagache, params=[self.Lcii_narrow,self.z],
                                      errors=[self.Lcii_narrow_err,0])
         f = lambda m_out_dot, v_out : 0.5*m_out_dot*v_out**2
         self.e_out_dot_err = mc_errors(f=f, params=[self.m_out_dot,self.v_out],
