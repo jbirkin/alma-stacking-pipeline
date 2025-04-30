@@ -10,7 +10,9 @@ setup(
         "pyyaml",
         "emcee",
         "tqdm",
-        "pyregion"
+        "pyregion",
+        "dash",
+        "plotly"
     ],
     entry_points={
         "console_scripts": [

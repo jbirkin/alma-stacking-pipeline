@@ -1,0 +1,46 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+*.env
+
+# Data and outputs
+data/
+*.fits
+*.csv
+*.txt
+*.dat
+*.hdf5
+*.npy
+*.npz
+
+# Logs and temp
+*.log
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python-specific
+*.egg-info/
+*.pkl
+
+# IDE/editor settings
+.vscode/
+.idea/
+
+# Misc
+*.swp
+*.bak
+
+# Ignore these until they're ready
+stacking_app_test.py
+Procfile
+application.py
